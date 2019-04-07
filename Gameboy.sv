@@ -363,10 +363,10 @@ cart gb_cart_if_1(
 );
 
 
-wire lcd_clkena;
-wire [14:0] lcd_data;
-wire [1:0] lcd_mode;
-wire lcd_on;
+wire lcd_clkena1;
+wire [14:0] lcd_data1;
+wire [1:0] lcd_mode1;
+wire lcd_on1;
 
 // the gameboy itself
 gb gb (
@@ -395,10 +395,10 @@ gb gb (
 	.audio_r 	 ( AUDIO_R	  ),
 	
 	// interface to the lcd
-	.lcd_clkena  ( lcd_clkena ),
-	.lcd_data    ( lcd_data   ),
-	.lcd_mode    ( lcd_mode   ),
-	.lcd_on      ( lcd_on     ),
+	.lcd_clkena  ( lcd_clkena1 ),
+	.lcd_data    ( lcd_data1   ),
+	.lcd_mode    ( lcd_mode1   ),
+	.lcd_on      ( lcd_on1     ),
 	.speed       ( speed      )
 );
 
@@ -433,6 +433,11 @@ cart gb_cart_if_2(
 	.mbc_bank ( cart_if2_mbc_bank )
 );
 
+wire lcd_clkena2;
+wire [14:0] lcd_data2;
+wire [1:0] lcd_mode2;
+wire lcd_on2;
+
 // the gameboy itself
 gb gb2 (
 	.reset	    ( reset      ),
@@ -460,10 +465,10 @@ gb gb2 (
 	.audio_r 	 ( debug_data[47:32] ), //AUDIO_R	  ),
 	
 	// interface to the lcd
-	.lcd_clkena  ( debug_data[31] ), //lcd_clkena ),
-	.lcd_data    ( debug_data[30:16] ), //lcd_data   ),
-	.lcd_mode    ( debug_data[15:14] ), //lcd_mode   ),
-	.lcd_on      ( debug_data[13] ), //lcd_on     ),
+	.lcd_clkena  ( lcd_clkena2 ),
+	.lcd_data    ( lcd_data2   ),
+	.lcd_mode    ( lcd_mode2   ),
+	.lcd_on      ( lcd_on2     ),
 	.speed       ( debug_data[12] ) //speed      )
 );
 
@@ -475,6 +480,7 @@ lcd lcd (
 	 .pclk   ( clk_sys_old),
 	 .pce    ( ce_pix     ),
 	 .clk    ( clk_cpu    ),
+
 	 .isGBC  ( isGBC      ),
 
 	 .tint   ( status[1]  ),
@@ -486,11 +492,17 @@ lcd lcd (
 	 .pal3   (palette[79:56]),
 	 .pal4   (palette[55:32]),
 
-	 // serial interface
-	 .clkena ( lcd_clkena ),
-	 .data   ( lcd_data   ),
-	 .mode   ( lcd_mode   ),  // used to detect begin of new lines and frames
-	 .on     ( lcd_on     ),
+	 // gb instance 1
+	 .clkena1 ( lcd_clkena1 ),
+	 .data1   ( lcd_data1   ),
+	 .mode1   ( lcd_mode1   ),
+	 .on1     ( lcd_on1     ),
+
+	 // gb instance 1
+	 .clkena2 ( lcd_clkena2 ),
+	 .data2   ( lcd_data2   ),
+	 .mode2   ( lcd_mode2   ),
+	 .on2     ( lcd_on2     ),
 	 
   	 .hs     ( video_hs   ),
 	 .vs     ( video_vs   ),
@@ -545,9 +557,6 @@ dpram_dif #(12,8,11,16) boot_rom_gbc_1 (
 	.q_b ()
 );
 
-wire [7:0] bios_do;
-wire [11:0] bios_addr;
-
 dpram_dif #(12,8,11,16) boot_rom_gbc_2 (
 	.clock (clk_sys),
 	
@@ -561,9 +570,6 @@ dpram_dif #(12,8,11,16) boot_rom_gbc_2 (
 	.data_b (ioctl_dout),
 	.q_b ()
 );
-
-
-
 
 reg [1:0] line_cnt;
 always @(posedge clk_sys_old) begin
