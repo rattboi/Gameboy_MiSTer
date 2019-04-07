@@ -221,7 +221,7 @@ wire [16:0] cram_addr = mbc1? {2'b00,mbc1_ram_bank, cart_addr[12:0]}:
 
 // Up to 8kb * 16banks of Cart Ram (128kb)
 
-dpram #(16) cram_l (
+dpram #(10) cram_l (
 	.clock_a (clk_cpu2x),
 	.address_a (cram_addr[16:1]),
 	.wren_a (cram_wr & ~cram_addr[0]),
@@ -235,7 +235,7 @@ dpram #(16) cram_l (
 	.q_b ()
 );
 
-dpram #(16) cram_h (
+dpram #(10) cram_h (
 	.clock_a (clk_cpu2x),
 	.address_a (cram_addr[16:1]),
 	.wren_a (cram_wr & cram_addr[0]),
