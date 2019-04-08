@@ -223,29 +223,29 @@ wire [16:0] cram_addr = mbc1? {2'b00,mbc1_ram_bank, cart_addr[12:0]}:
 
 dpram #(10) cram_l (
 	.clock_a (clk_cpu2x),
-	.address_a (cram_addr[16:1]),
+	.address_a (cram_addr[10:1]),
 	.wren_a (cram_wr & ~cram_addr[0]),
 	.data_a (cart_di),
 	.q_a (cram_q_l),
 	
 	.clock_b (clk_sys),
-	.address_b (0),
-	.wren_b (0),
-	.data_b (0),
+	.address_b (10'b0),
+	.wren_b (1'b0),
+	.data_b (8'b0),
 	.q_b ()
 );
 
 dpram #(10) cram_h (
 	.clock_a (clk_cpu2x),
-	.address_a (cram_addr[16:1]),
+	.address_a (cram_addr[10:1]),
 	.wren_a (cram_wr & cram_addr[0]),
 	.data_a (cart_di),
 	.q_a (cram_q_h),
 	
 	.clock_b (clk_sys),
-	.address_b (0),
-	.wren_b (0),
-	.data_b (0),
+	.address_b (10'b0),
+	.wren_b (1'b0),
+	.data_b (8'b0),
 	.q_b ()
 );
 

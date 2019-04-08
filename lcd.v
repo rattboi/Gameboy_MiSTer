@@ -60,7 +60,7 @@ dpram #(15,15) vbuffer1 (
 	.q_b (pixel_reg1)
 );
 
-always @(posedge clk1) begin
+always @(posedge clk) begin
 	if(!on1 || (mode1==2'd01)) begin  //lcd disabled or vsync restart pointer
 	   vbuffer1_inptr <= 15'h0;
 	end else begin
@@ -85,7 +85,7 @@ dpram #(15,15) vbuffer2 (
 	.q_b (pixel_reg2)
 );
 
-always @(posedge clk2) begin
+always @(posedge clk) begin
 	if(!on2 || (mode2==2'd01)) begin  //lcd disabled or vsync restart pointer
 	   vbuffer2_inptr <= 15'h0;
 	end else begin
@@ -103,9 +103,9 @@ end
 
 // 
 parameter H   = 320;    // width of visible area
-parameter HFP = 16;     // unused time before hsync
-parameter HS  = 20;     // width of hsync
-parameter HBP = 32;     // unused time after hsync
+parameter HFP = 32; //16;     // unused time before hsync
+parameter HS  = 40; //20;     // width of hsync
+parameter HBP = 64; //32;     // unused time after hsync
 // total = 228
 
 parameter V   = 576;    // height of visible area

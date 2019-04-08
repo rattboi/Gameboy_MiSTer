@@ -129,9 +129,9 @@ assign LED_USER  = ioctl_download; // | sav_pending;
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
 
-assign VIDEO_ARX = status[4:3] == 2'b10 ? 8'd16:
-						 status[4:3] == 2'b01 ? 8'd10:
-						 8'd4;
+assign VIDEO_ARX = status[4:3] == 2'b10 ? 8'd32:
+						 status[4:3] == 2'b01 ? 8'd20:
+						 8'd8;
 						 
 assign VIDEO_ARY = status[4:3] == 2'b10 ? 8'd9:
 						 status[4:3] == 2'b01 ? 8'd9:
@@ -139,8 +139,7 @@ assign VIDEO_ARY = status[4:3] == 2'b10 ? 8'd9:
 
 assign AUDIO_MIX = status[8:7];
 
-//`include "build_id.v" 
-`define BUILD_DATE "asdf"
+`include "build_id.v" 
 
 localparam CONF_STR1 = {
 	"GAMEBOY;;",
@@ -391,8 +390,8 @@ gb gb (
 	.gbc_bios_do     ( bios_do_gb1    ),
 
 	// audio
-	.audio_l 	 ( AUDIO_L	  ),
-	.audio_r 	 ( AUDIO_R	  ),
+	.audio_l 	 ( debug_data[63:48] ),//AUDIO_L	  ),
+	.audio_r 	 ( debug_data[47:32] ),
 	
 	// interface to the lcd
 	.lcd_clkena  ( lcd_clkena1 ),
@@ -422,12 +421,12 @@ cart gb_cart_if_2(
 	.cart_rom_size( cart_rom_size ),
 	.cart_ram_size( cart_ram_size ),
 	
-	.sdram_do ( sdram_do ),
+	.sdram_do ( sdram_do_gb2 ),
 	
 	.cart_addr( cart_addr_gb2 ),
 	.cart_rd( cart_rd_gb2 ),
 	.cart_wr( cart_wr_gb2 ),
-	.cart_di( cart_di_gb1 ),
+	.cart_di( cart_di_gb2 ),
 	.cart_do( cart_if2_do ),
 	
 	.mbc_bank ( cart_if2_mbc_bank )
@@ -461,8 +460,8 @@ gb gb2 (
 	.gbc_bios_do     ( bios_do_gb2    ),
 
 	// audio
-	.audio_l 	 ( debug_data[63:48] ), //AUDIO_L	  ),
-	.audio_r 	 ( debug_data[47:32] ), //AUDIO_R	  ),
+	.audio_l 	 ( AUDIO_L ), //AUDIO_L	  ),
+	.audio_r 	 ( AUDIO_R ), //), //AUDIO_R	  ),
 	
 	// interface to the lcd
 	.lcd_clkena  ( lcd_clkena2 ),
@@ -477,7 +476,7 @@ wire [7:0] video_r, video_g, video_b;
 wire video_hs, video_vs, video_bl;
 
 lcd lcd (
-	 .pclk   ( clk_sys_old),
+	 .pclk   ( clk_sys_old ),
 	 .pce    ( ce_pix     ),
 	 .clk    ( clk_cpu    ),
 
@@ -493,16 +492,16 @@ lcd lcd (
 	 .pal4   (palette[55:32]),
 
 	 // gb instance 1
-	 .clkena1 ( lcd_clkena1 ),
-	 .data1   ( lcd_data1   ),
-	 .mode1   ( lcd_mode1   ),
-	 .on1     ( lcd_on1     ),
+	 .clkena1 ( lcd_clkena2 ),
+	 .data1   ( lcd_data2   ),
+	 .mode1   ( lcd_mode2   ),
+	 .on1     ( lcd_on2     ),
 
 	 // gb instance 1
-	 .clkena2 ( lcd_clkena2 ),
-	 .data2   ( lcd_data2   ),
-	 .mode2   ( lcd_mode2   ),
-	 .on2     ( lcd_on2     ),
+	 .clkena2 ( lcd_clkena1 ),
+	 .data2   ( lcd_data1   ),
+	 .mode2   ( lcd_mode1   ),
+	 .on2     ( lcd_on1     ),
 	 
   	 .hs     ( video_hs   ),
 	 .vs     ( video_vs   ),
