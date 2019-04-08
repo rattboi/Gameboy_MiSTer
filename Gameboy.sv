@@ -367,6 +367,8 @@ wire [14:0] lcd_data1;
 wire [1:0] lcd_mode1;
 wire lcd_on1;
 
+wire [15:0] gb1_audio_l, gb1_audio_r;
+  
 // the gameboy itself
 gb gb (
 	.reset	    ( reset      ),
@@ -390,8 +392,8 @@ gb gb (
 	.gbc_bios_do     ( bios_do_gb1    ),
 
 	// audio
-	.audio_l 	 ( debug_data[63:48] ),//AUDIO_L	  ),
-	.audio_r 	 ( debug_data[47:32] ),
+	.audio_l 	 ( gb1_audio_l ),
+	.audio_r 	 ( gb1_audio_r ),
 	
 	// interface to the lcd
 	.lcd_clkena  ( lcd_clkena1 ),
@@ -437,6 +439,8 @@ wire [14:0] lcd_data2;
 wire [1:0] lcd_mode2;
 wire lcd_on2;
 
+wire [15:0] gb2_audio_l, gb2_audio_r;
+
 // the gameboy itself
 gb gb2 (
 	.reset	    ( reset      ),
@@ -460,8 +464,8 @@ gb gb2 (
 	.gbc_bios_do     ( bios_do_gb2    ),
 
 	// audio
-	.audio_l 	 ( AUDIO_L ), //AUDIO_L	  ),
-	.audio_r 	 ( AUDIO_R ), //), //AUDIO_R	  ),
+	.audio_l 	 ( gb2_audio_l ), //AUDIO_L	  ),
+	.audio_r 	 ( gb2_audio_r ), //), //AUDIO_R	  ),
 	
 	// interface to the lcd
 	.lcd_clkena  ( lcd_clkena2 ),
@@ -470,6 +474,14 @@ gb gb2 (
 	.lcd_on      ( lcd_on2     ),
 	.speed       ( debug_data[12] ) //speed      )
 );
+
+// simple audio mixer for dual gb
+wire [16:0] mixed_audio_l = gb1_audio_l + gb2_audio_l;
+assign AUDIO_L = mixed_audio_l[16:1];
+
+wire [16:0] mixed_audio_r = gb1_audio_r + gb2_audio_r;
+assign AUDIO_R = mixed_audio_r[16:1];
+
 
 // the lcd to vga converter
 wire [7:0] video_r, video_g, video_b;
@@ -492,16 +504,16 @@ lcd lcd (
 	 .pal4   (palette[55:32]),
 
 	 // gb instance 1
-	 .clkena1 ( lcd_clkena2 ),
-	 .data1   ( lcd_data2   ),
-	 .mode1   ( lcd_mode2   ),
-	 .on1     ( lcd_on2     ),
+	 .clkena1 ( lcd_clkena1 ),
+	 .data1   ( lcd_data1   ),
+	 .mode1   ( lcd_mode1   ),
+	 .on1     ( lcd_on1     ),
 
 	 // gb instance 1
-	 .clkena2 ( lcd_clkena1 ),
-	 .data2   ( lcd_data1   ),
-	 .mode2   ( lcd_mode1   ),
-	 .on2     ( lcd_on1     ),
+	 .clkena2 ( lcd_clkena2 ),
+	 .data2   ( lcd_data2   ),
+	 .mode2   ( lcd_mode2   ),
+	 .on2     ( lcd_on2     ),
 	 
   	 .hs     ( video_hs   ),
 	 .vs     ( video_vs   ),

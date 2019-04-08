@@ -164,7 +164,7 @@ always@(posedge pclk) begin
 end
 
 reg [7:0] currentpixel;
-reg [1:0] linecnt;
+reg [2:0] linecnt;
 
 always@(posedge pclk) begin
 	if(pce) begin
@@ -174,7 +174,7 @@ always@(posedge pclk) begin
 				vbuffer_outptr 	<= 15'd0; 
 				vbuffer_lineptr	<= 15'd0;
 				currentpixel		<=	8'd0;
-				linecnt <= 2'd3;
+				linecnt <= 2'd7;
 			end
 		end else
 			// visible area?
