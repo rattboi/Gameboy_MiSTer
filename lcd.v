@@ -103,9 +103,9 @@ end
 
 // 
 parameter H   = 320;    // width of visible area
-parameter HFP = 32; //16;     // unused time before hsync
-parameter HS  = 40; //20;     // width of hsync
-parameter HBP = 64; //32;     // unused time after hsync
+parameter HFP = 16;     // unused time before hsync
+parameter HS  = 20;     // width of hsync
+parameter HBP = 32;     // unused time after hsync
 // total = 228
 
 parameter V   = 576;    // height of visible area

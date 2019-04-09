@@ -51,7 +51,12 @@ module gb (
 	output [1:0] lcd_mode,
 	output lcd_on,
 	
-	output speed   //GBC
+	output speed,   //GBC
+
+   input serial_clk_in,
+   output serial_clk_out,
+   input  serial_data_in,
+   output serial_data_out
 );
 
 // include cpu
@@ -111,7 +116,7 @@ wire [7:0] cpu_di =
 	   isGBC&&sel_hdma?{hdma_do}:  //hdma GBC
 	   isGBC&&sel_key1?{cpu_speed,6'h3f,prepare_switch}: //key1 cpu speed register(GBC)
 		sel_joy?joy_do:         // joystick register
-		sel_sb?8'hFF:				// serial transfer data register
+		sel_sb?sb:				// serial transfer data register
 		sel_sc?sc_r:				// serial transfer control register
 		sel_timer?timer_do:     // timer registers
 		sel_video_reg?video_do: // video registers
@@ -205,13 +210,23 @@ gbc_snd audio (
 // --------------------------------------------------------------------
 // -----------------------serial port(dummy)---------------------------
 // --------------------------------------------------------------------
+wire [7:0] sb = sb_r | sb_secondary_r;
 
 reg [3:0] serial_counter;
 reg sc_start,sc_shiftclock;
 
+reg [7:0] sb_r = 0;
+
+reg serial_out_r = 0;
+assign serial_data_out = serial_out_r | serial_secondary_out_r;
+
+reg serial_clk_out_r = 0;
+assign serial_clk_out = serial_clk_out_r;
+
 reg serial_irq;
 reg [8:0] serial_clk_div; //8192Hz
 
+// serial master
 always @(posedge clk_cpu) begin
 	serial_irq <= 1'b0;
    if(reset) begin
@@ -223,26 +238,56 @@ always @(posedge clk_cpu) begin
 		if (cpu_do[7]) begin 						//enable transfer
 			serial_clk_div <= 9'h1FF;
 			serial_counter <= 4'd8;
+			serial_clk_out_r <= 1'b1;
 		end 
 	end else if (sc_start && sc_shiftclock) begin // serial transfer and serial clock enabled
-		
 		serial_clk_div <= serial_clk_div - 9'd1;
 		
-		if (serial_clk_div == 9'd0  && serial_counter)
-				serial_counter <= serial_counter - 4'd1;
+		if (serial_clk_div == 9'd100 && serial_counter) begin
+			serial_clk_out_r <= ~serial_clk_out_r;
+		end
+		
+      if (serial_clk_div == 9'd0  && serial_counter) begin
+			serial_counter <= serial_counter - 4'd1;
+
+			serial_clk_out_r <= ~serial_clk_out;
+         serial_out_r <= sb[7];
+         sb_r <= {sb[6:0], serial_data_in};
+      end
 		
 		if (!serial_counter) begin
 			serial_irq <= 1'b1; 	//trigger interrupt
 			sc_start <= 1'b0; 	//reset transfer state
 			serial_clk_div <= 9'h1FF;
 		   serial_counter <= 4'd8;
-		end	
-	
+		end
 	end
-	
 end
 
-			
+reg [3:0] serial_secondary_counter;
+reg serial_secondary_irq;
+reg [7:0] sb_secondary_r;
+reg serial_secondary_out_r;
+
+// serial secondary
+always @(posedge serial_clk_in) begin
+	serial_secondary_irq <= 1'b0;
+
+	if(reset) begin
+		serial_secondary_counter <= 4'd8;
+		sb_secondary_r <= 8'b0;
+	end else begin
+		serial_secondary_counter <= serial_secondary_counter - 4'd1;
+
+		serial_secondary_out_r <= sb[7];
+		sb_secondary_r <= {sb[6:0], serial_data_in};
+
+		if (!serial_secondary_counter) begin
+			serial_secondary_irq <= 1'b1; 	//trigger interrupt
+			serial_secondary_counter <= 4'd8;
+		end
+	end
+end
 
 // --------------------------------------------------------------------
 // ------------------------------ inputs ------------------------------
@@ -307,7 +352,7 @@ always @(negedge clk_cpu) begin //negedge to trigger interrupt earlier
 	if(timer_irq) if_r[2] <= 1'b1;
 	
 	// serial irq already is a 1 clock event
-	if(serial_irq) if_r[3] <= 1'b1;
+	if(serial_irq || serial_secondary_irq) if_r[3] <= 1'b1;
 
 	// falling edge on any input line P10..P13
 	inputD <= {joy_p4, joy_p5};

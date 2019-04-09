@@ -368,7 +368,10 @@ wire [1:0] lcd_mode1;
 wire lcd_on1;
 
 wire [15:0] gb1_audio_l, gb1_audio_r;
-  
+ 
+wire gb1_serial_clk_out;
+wire gb1_serial_data_out;
+
 // the gameboy itself
 gb gb (
 	.reset	    ( reset      ),
@@ -400,7 +403,12 @@ gb gb (
 	.lcd_data    ( lcd_data1   ),
 	.lcd_mode    ( lcd_mode1   ),
 	.lcd_on      ( lcd_on1     ),
-	.speed       ( speed      )
+	.speed       ( speed      ),
+
+   .serial_clk_in(gb2_serial_clk_out),
+   .serial_data_in(gb2_serial_data_out),
+   .serial_clk_out(gb1_serial_clk_out),
+   .serial_data_out(gb1_serial_data_out)
 );
 
 wire [7:0] cart_if2_do;
@@ -441,6 +449,9 @@ wire lcd_on2;
 
 wire [15:0] gb2_audio_l, gb2_audio_r;
 
+wire gb2_serial_clk_out;
+wire gb2_serial_data_out;
+
 // the gameboy itself
 gb gb2 (
 	.reset	    ( reset      ),
@@ -472,7 +483,12 @@ gb gb2 (
 	.lcd_data    ( lcd_data2   ),
 	.lcd_mode    ( lcd_mode2   ),
 	.lcd_on      ( lcd_on2     ),
-	.speed       ( debug_data[12] ) //speed      )
+	.speed       ( debug_data[12] ),
+	
+   .serial_clk_in  (gb1_serial_clk_out),
+   .serial_data_in (gb1_serial_data_out),
+   .serial_clk_out (gb2_serial_clk_out),
+   .serial_data_out(gb2_serial_data_out)
 );
 
 // simple audio mixer for dual gb
