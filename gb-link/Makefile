@@ -1,13 +1,17 @@
 MODULE=link
-VMODULE=V$(MODULE)
 
+VMODULE=V$(MODULE)
 VMODULE_OBJ_DIR=obj_dir
 
-run: $(VMODULE_OBJ_DIR)/$(VMODULE)
-	$(VMODULE_OBJ_DIR)/$(VMODULE)
+.PHONY : all vcd clean
+
+all : vcd
 
 vcd: $(MODULE).vcd
 	vcd -w=3 $(MODULE).vcd
+
+$(MODULE).vcd: $(VMODULE_OBJ_DIR)/$(VMODULE)
+	$(VMODULE_OBJ_DIR)/$(VMODULE)
 
 $(VMODULE_OBJ_DIR)/$(VMODULE): $(MODULE).v $(MODULE)_tb.cpp
 	verilator -Wall --cc --trace $(MODULE).v --exe $(MODULE)_tb.cpp
