@@ -17,14 +17,15 @@ module link #(
 
   output serial_clk_out,
   output serial_data_out,
-  output sb,
-  output serial_irq
+  output [7:0] sb,
+  output serial_irq,
+  output reg sc_start,
+  output reg sc_int_clock
 );
 
-wire [7:0] sb = sb_r;
+assign sb = sb_r;
 
 reg [3:0] serial_counter;
-reg sc_start,sc_int_clock;
 
 reg [7:0] sb_r = 0;
 
@@ -34,14 +35,16 @@ assign serial_data_out = serial_out_r;
 reg serial_clk_out_r = 1;
 assign serial_clk_out = serial_clk_out_r;
 
-reg serial_irq;
+assign serial_irq = serial_irq_r;
+reg serial_irq_r;
+
 reg [8:0] serial_clk_div; //8192Hz
 
 reg serial_clk_in_last;
 
 // serial master
 always @(posedge clk) begin
-	serial_irq <= 1'b0;
+	serial_irq_r <= 1'b0;
    if(rst) begin
 		  sc_start <= 1'b0;
 		  sc_int_clock <= 1'b0;
@@ -70,7 +73,7 @@ always @(posedge clk) begin
                serial_clk_div <= CLK_DIV;
             end
          end else begin
-            serial_irq <= 1'b1;
+            serial_irq_r <= 1'b1;
             sc_start <= 1'b0;
             serial_clk_div <= CLK_DIV;
             serial_counter <= 4'd8;
@@ -83,7 +86,7 @@ always @(posedge clk) begin
                sb_r <= {sb[6:0], serial_data_in};
                serial_counter <= serial_counter - 1;
             end else begin
-               serial_irq <= 1'b1;
+               serial_irq_r <= 1'b1;
                sc_start <= 1'b0;
                serial_counter <= 4'd8;
             end

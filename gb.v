@@ -210,6 +210,8 @@ gbc_snd audio (
 
 wire serial_irq;
 wire [7:0] sb;
+wire sc_start;
+wire sc_shiftclock;
 
 link link (
   .clk(clk_cpu),
@@ -228,7 +230,9 @@ link link (
   .serial_clk_out(serial_clk_out),
   .serial_data_out(serial_data_out),
   .sb(sb),
-  .serial_irq(serial_irq)
+  .serial_irq(serial_irq),
+  .sc_start(sc_start),
+  .sc_int_clock(sc_shiftclock)
 
 );
 // --------------------------------------------------------------------
