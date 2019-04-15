@@ -166,6 +166,7 @@ localparam CONF_STR4 = {
 	"-;",
 	"O34,Aspect ratio,4:3,10:9,16:9;",
 	"O78,Stereo mix,none,25%,50%,100%;",
+	"OGH,Linked audio,GB 1,GB 2,Split L/R,Mix;",
 	"-;",
 	"R0,Reset;",
 	"J1,A,B,Select,Start;",
@@ -493,11 +494,20 @@ gb gb2 (
 
 // simple audio mixer for dual gb
 wire [16:0] mixed_audio_l = gb1_audio_l + gb2_audio_l;
-assign AUDIO_L = mixed_audio_l[16:1];
-
 wire [16:0] mixed_audio_r = gb1_audio_r + gb2_audio_r;
-assign AUDIO_R = mixed_audio_r[16:1];
+wire [16:0] mixed_audio_c1 = gb1_audio_l + gb1_audio_r;
+wire [16:0] mixed_audio_c2 = gb2_audio_l + gb2_audio_r;
 
+
+assign AUDIO_L = status[17:16] == 0 ? gb1_audio_l :
+                 status[17:16] == 1 ? gb2_audio_l :
+					  status[17:16] == 2 ? mixed_audio_c1 :
+					  mixed_audio_l;
+
+assign AUDIO_R = status[17:16] == 0 ? gb1_audio_r :
+                 status[17:16] == 1 ? gb2_audio_r :
+					  status[17:16] == 2 ? mixed_audio_c2 :
+					  mixed_audio_r;
 
 // the lcd to vga converter
 wire [7:0] video_r, video_g, video_b;

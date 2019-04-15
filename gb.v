@@ -218,11 +218,12 @@ link link (
   .rst(reset),
 
   .sel_sc(sel_sc),
+  .sel_sb(sel_sb),
   .cpu_wr_n(cpu_wr_n),
   .sc_start_in(cpu_do[7]),
   .sc_int_clock_in(cpu_do[0]),
 
-  .sb_in(0),
+  .sb_in(cpu_do),
 
   .serial_clk_in(serial_clk_in),
   .serial_data_in(serial_data_in),

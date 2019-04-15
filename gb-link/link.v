@@ -6,6 +6,7 @@ module link #(
   input rst,
 
   input sel_sc,
+  input sel_sb,
   input cpu_wr_n,
   input sc_start_in,
   input sc_int_clock_in,
@@ -57,7 +58,10 @@ always @(posedge clk) begin
 			serial_clk_div <= CLK_DIV;
 			serial_counter <= 4'd8;
 			serial_clk_out_r <= 1'b1;
-		end 
+         serial_clk_in_last <= serial_clk_in;
+		end
+	end else if (sel_sb && !cpu_wr_n) begin
+		sb_r <= sb_in;
 	end else if (sc_start) begin // serial transfer
       if (sc_int_clock) begin   // internal clock
          serial_clk_div <= serial_clk_div - 9'd1;
@@ -66,9 +70,9 @@ always @(posedge clk) begin
             if (serial_clk_div == (CLK_DIV/2)+1) begin
                serial_clk_out_r <= ~serial_clk_out_r;
                serial_out_r <= sb[7];
-               sb_r <= {sb[6:0], serial_data_in};
             end else if (serial_clk_div == 0) begin
-               serial_clk_out_r <= ~serial_clk_out;
+               sb_r <= {sb[6:0], serial_data_in};
+					serial_clk_out_r <= ~serial_clk_out;
                serial_counter <= serial_counter - 1;
                serial_clk_div <= CLK_DIV;
             end
@@ -80,19 +84,21 @@ always @(posedge clk) begin
          end
       end else begin  // external clock
          serial_clk_in_last <= serial_clk_in;
-         if (serial_clk_in_last != serial_clk_in && serial_clk_in == 1) begin
-            if (serial_counter != 0) begin
-               serial_out_r <= sb[7];
-               sb_r <= {sb[6:0], serial_data_in};
-               serial_counter <= serial_counter - 1;
-            end else begin
-               serial_irq_r <= 1'b1;
-               sc_start <= 1'b0;
-               serial_counter <= 4'd8;
-            end
+         if (serial_clk_in_last != serial_clk_in) begin
+				if (serial_clk_in == 0) begin                // negedge external clock
+						serial_out_r <= sb[7];                 // send out bit to linked gb
+						serial_counter <= serial_counter - 1;
+				end else begin                               // posedge external clock
+					sb_r <= {sb[6:0], serial_data_in};        // capture bit into sb
+					if (serial_counter == 0) begin            // read in 8 bits?
+						serial_irq_r <= 1'b1;                  // set interrupt, reset counter/sc_start for next read
+						sc_start <= 1'b0;
+						serial_counter <= 4'd8;
+					end
+				end
          end
       end
-  end
+   end
 end
 
 endmodule
