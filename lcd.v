@@ -204,7 +204,7 @@ wire [31:0] r10 = (r5 * 13) + (g5 * 2) + b5;
 wire [31:0] g10 = (g5 *  3) + b5;
 wire [31:0] b10 = (r5 *  3) + (g5 * 2) + (b5 * 11);
 
-wire vprepost = (v_cnt < VPRE) || (v_cnt > VPRE+V);
+wire vprepost = (v_cnt < VPRE) || (v_cnt >= VPRE+V);
 
 // gameboy "color" palette
 wire [7:0] pal_r = isGBC?r10[8:1]:
