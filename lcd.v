@@ -190,6 +190,7 @@ always@(posedge pclk) begin
 			end
 	end
 end
+
 wire [14:0] pixel_reg = (h_cnt < 160) ? pixel_reg1 : pixel_reg2;
 wire on = (h_cnt < 160) ? on1 : on2;
 
@@ -202,6 +203,8 @@ wire [4:0] b5 = pixel_reg[14:10];
 wire [31:0] r10 = (r5 * 13) + (g5 * 2) + b5;
 wire [31:0] g10 = (g5 *  3) + b5;
 wire [31:0] b10 = (r5 *  3) + (g5 * 2) + (b5 * 11);
+
+wire vprepost = (v_cnt < VPRE) || (v_cnt > VPRE+V);
 
 // gameboy "color" palette
 wire [7:0] pal_r = isGBC?r10[8:1]:
@@ -224,8 +227,8 @@ wire [7:0] pal_b = isGBC?b10[8:1]:
 
 // greyscale
 wire [7:0] grey = (pixel==0)?8'd252:(pixel==1)?8'd168:(pixel==2)?8'd96:8'd0;
-assign r = blank?8'd0:tint||isGBC?pal_r:grey;
-assign g = blank?8'd0:tint||isGBC?pal_g:grey;
-assign b = blank?8'd0:tint||isGBC?pal_b:grey;
+assign r = blank||vprepost?8'd0:tint||isGBC?pal_r:grey;
+assign g = blank||vprepost?8'd0:tint||isGBC?pal_g:grey;
+assign b = blank||vprepost?8'd0:tint||isGBC?pal_b:grey;
 
 endmodule

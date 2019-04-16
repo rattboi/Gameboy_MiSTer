@@ -267,7 +267,7 @@ wire sdram_we = cart_download & dn_write;
 
 assign SDRAM_CKE = 1;
 
-dpram #(16, 16) sdram (
+dpram #(17, 16) sdram (
 	.clock_a (clk_cpu2x),
 	.address_a (sdram_addr),
 	.wren_a (sdram_we),
