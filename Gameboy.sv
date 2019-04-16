@@ -129,9 +129,9 @@ assign LED_USER  = ioctl_download; // | sav_pending;
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
 
-assign VIDEO_ARX = status[4:3] == 2'b10 ? 8'd32:
-						 status[4:3] == 2'b01 ? 8'd20:
-						 8'd8;
+assign VIDEO_ARX = status[4:3] == 2'b10 ? 8'd16:
+						 status[4:3] == 2'b01 ? 8'd10:
+						 8'd4;
 						 
 assign VIDEO_ARY = status[4:3] == 2'b10 ? 8'd9:
 						 status[4:3] == 2'b01 ? 8'd9:
@@ -184,6 +184,7 @@ pll pll
 	.rst(0),
 	.outclk_0(clk_sys),
 	.outclk_1(SDRAM_CLK),
+	.outclk_2(clk_pix),
 	.locked(pll_locked)
 );
 
@@ -514,7 +515,7 @@ wire [7:0] video_r, video_g, video_b;
 wire video_hs, video_vs, video_bl;
 
 lcd lcd (
-	 .pclk   ( clk_sys_old ),
+	 .pclk   ( clk_pix    ),
 	 .pce    ( ce_pix     ),
 	 .clk    ( clk_cpu    ),
 
@@ -554,26 +555,32 @@ assign VGA_R  = video_r;
 assign VGA_G  = video_g;
 assign VGA_B  = video_b;
 assign VGA_DE = ~video_bl;
-assign CLK_VIDEO = clk_sys;
-assign CE_PIXEL = ce_pix & !line_cnt;
+assign CLK_VIDEO = clk_pix;
+assign CE_PIXEL = ce_pix;
 assign VGA_HS = video_hs;
 assign VGA_VS = video_vs;
 
-wire clk_sys_old =  clk_sys & ce_sys;
-wire ce_cpu2x = ce_pix;
+wire ce_cpu2x;
 wire clk_cpu = clk_sys & ce_cpu;
-wire clk_cpu2x = clk_sys & ce_pix;
+wire clk_cpu2x = clk_sys & ce_cpu2x;
 
-reg ce_pix, ce_cpu,ce_sys;
+reg ce_cpu, ce_sys;
 always @(negedge clk_sys) begin
 	reg [3:0] div = 0;
 
 	div <= div + 1'd1;
-	ce_sys   <= !div[0];
-	ce_pix   <= !div[2:0];
-	ce_cpu   <= !div[3:0];
+	ce_sys   <= !div[0];     // clk_sys div 2   = 33.5544 MHz
+	ce_cpu2x <= !div[2:0];   // clk_sys div 8   =  8.3886 MHz
+	ce_cpu   <= !div[3:0];   // clk_sys div 16  =  4.1943 MHz
 end
 
+reg ce_pix;
+always @(negedge clk_pix) begin
+  reg [3:0] div = 0;
+
+	div <= div + 1'd1;
+	ce_pix   <= !div[1:0];   // clk_sys div 4   = 16.7772 MHz
+end
 
 ///////////////////////////// GBC BIOS /////////////////////////////////
 
@@ -607,18 +614,6 @@ dpram_dif #(12,8,11,16) boot_rom_gbc_2 (
 	.data_b (ioctl_dout),
 	.q_b ()
 );
-
-reg [1:0] line_cnt;
-always @(posedge clk_sys_old) begin
-	reg old_hs;
-	reg old_vs;
-
-	old_vs <= video_vs;
-	old_hs <= video_hs;
-
-	if(old_hs & ~video_hs) line_cnt <= line_cnt + 1'd1;
-	if(old_vs & ~video_vs) line_cnt <= 0;
-end
 
 // used to force outputs to live (just debugging)
 
