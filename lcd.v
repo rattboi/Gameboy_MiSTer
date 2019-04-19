@@ -61,17 +61,6 @@ dpram #(15,15) vbuffer1 (
 	.q_b (pixel_reg1)
 );
 
-always @(posedge clk) begin
-	if(!on1 || (mode1==2'd01)) begin  //lcd disabled or vsync restart pointer
-	   vbuffer1_inptr <= 15'h0;
-	end else begin
-		// end of vsync
-		if(clkena1) begin
-			vbuffer1_inptr <= vbuffer1_inptr + 15'd1;
-		end
-	end
-end
-
 dpram #(15,15) vbuffer2 (
 	.clock_a (clk),
 	.address_a (vbuffer2_inptr),
@@ -87,6 +76,15 @@ dpram #(15,15) vbuffer2 (
 );
 
 always @(posedge clk) begin
+	if(!on1 || (mode1==2'd01)) begin  //lcd disabled or vsync restart pointer
+	   vbuffer1_inptr <= 15'h0;
+	end else begin
+		// end of vsync
+		if(clkena1) begin
+			vbuffer1_inptr <= vbuffer1_inptr + 15'd1;
+		end
+	end
+  
 	if(!on2 || (mode2==2'd01)) begin  //lcd disabled or vsync restart pointer
 	   vbuffer2_inptr <= 15'h0;
 	end else begin
@@ -173,16 +171,16 @@ always@(posedge pclk) begin
 			//reset output at vsync
 			if(v_cnt == VPRE+V+VPOST+VFP) begin
 				vbuffer_outptr 	<= 15'd0;
-				vbuffer_outptr2 <= 15'd0;
+				vbuffer_outptr2	<= 15'd0;
 				vbuffer_lineptr	<= 15'd0;
-				currentpixel		<=	9'd0;
 			end
+			currentpixel			<= 9'd0;
 		end else
 			// visible area?
 			if((v_cnt >= VPRE) && (v_cnt < (VPRE + V)) && (h_cnt < H)) begin
-				vbuffer_outptr  <= vbuffer_lineptr + currentpixel + 0;
-				vbuffer_outptr2 <= vbuffer_lineptr + currentpixel - 160;
-				if (currentpixel + 9'd1 == 320) begin
+				vbuffer_outptr  <= vbuffer_lineptr + currentpixel - 0;
+				vbuffer_outptr2 <= vbuffer_lineptr + currentpixel - (160 - 1);
+				if (currentpixel + 9'd1 == H) begin
 					currentpixel <= 9'd0;
 					vbuffer_lineptr <= vbuffer_lineptr + 15'd160;
 				end else
